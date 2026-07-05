@@ -8,6 +8,7 @@ const databaseUrl = process.env.DATABASE_URL;
 const allowedOrigins = new Set(
   [
     "https://caplore.vercel.app",
+    "https://www.caplore.in",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     ...(process.env.ALLOWED_ORIGINS ?? "").split(","),
