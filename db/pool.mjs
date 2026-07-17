@@ -1,15 +1,10 @@
 import pg from "pg";
+import { config } from "../lib/config.mjs";
 
 const { Pool } = pg;
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  console.error("DATABASE_URL is required");
-  process.exit(1);
-}
 
 export const pool = new Pool({
-  connectionString: databaseUrl,
+  connectionString: config.databaseUrl,
   max: 5,
   idleTimeoutMillis: 30_000,
 });

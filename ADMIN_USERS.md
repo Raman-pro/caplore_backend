@@ -4,7 +4,7 @@ There is no admin API/UI for this table — it's managed directly against the
 Railway Postgres database via `psql`. This doc covers connecting, and the
 insert/update/delete SQL you'll need.
 
-Table shape (defined in `server.mjs`):
+Table shape (defined in `db/schema.mjs`):
 
 ```sql
 app_users (

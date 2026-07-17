@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { pool } from "../db/pool.mjs";
+import { config } from "../lib/config.mjs";
 
 const PASSWORD_MAX_LENGTH = 200;
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
@@ -15,7 +16,7 @@ function timingSafeEqualText(left, right) {
 }
 
 function requireAdmin(request, response, next) {
-  const configuredKey = process.env.ADMIN_API_KEY;
+  const configuredKey = config.adminApiKey;
 
   if (!configuredKey) {
     return response.status(503).json({ error: "Admin API is not configured." });
@@ -242,3 +243,5 @@ adminRouter.delete("/admin/users/:username", async (request, response) => {
     return response.status(500).json({ error: "Could not delete user." });
   }
 });
+
+

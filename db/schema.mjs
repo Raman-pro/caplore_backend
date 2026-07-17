@@ -23,6 +23,13 @@ const DUMMY_USERS = [
     phoneNumber: "+442075550103",
     password: "Caplore789!",
   },
+{
+    username: "yuvraj.singh",
+    name: "Yuvraj Singh",
+    email: "yuvraj.singh@example.com",
+    phoneNumber: "+919876543210",
+    password: "Caplore012!",
+  },
 ];
 
 async function seedDummyUsers() {
@@ -84,11 +91,19 @@ export async function initializeDatabase() {
       id BIGSERIAL PRIMARY KEY,
       author_id BIGINT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
       body TEXT NOT NULL,
+      category VARCHAR(20) NOT NULL DEFAULT 'question' CHECK (category IN ('deal_insight', 'market_update', 'question')),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  try {
+    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS category VARCHAR(20) NOT NULL DEFAULT 'question'`);
+    await pool.query(`ALTER TABLE posts ADD CONSTRAINT posts_category_check CHECK (category IN ('deal_insight', 'market_update', 'question')) NOT VALID`);
+  } catch {
+    // Column or constraint already exists — safe to ignore
+  }
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_posts_author_created ON posts(author_id, created_at DESC)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category)`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_images (
@@ -124,6 +139,18 @@ export async function initializeDatabase() {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_likes_post_id ON likes(post_id)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id)`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      id BIGSERIAL PRIMARY KEY,
+      post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT bookmarks_unique_post_user UNIQUE (post_id, user_id)
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_id, created_at DESC)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_bookmarks_post_user ON bookmarks(post_id, user_id)`);
 
   await seedDummyUsers();
 }

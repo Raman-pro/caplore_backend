@@ -1,13 +1,19 @@
+import { config } from "./lib/config.mjs";
 import express from "express";
+import { Router } from "express";
 import { pool } from "./db/pool.mjs";
 import { initializeDatabase } from "./db/schema.mjs";
 import { corsMiddleware } from "./middleware/cors.mjs";
+import { requireAuth } from "./middleware/auth.mjs";
 import { miscRouter } from "./routes/misc.mjs";
 import { authRouter } from "./routes/auth.mjs";
-import { communityRouter } from "./routes/community.mjs";
 import { adminRouter } from "./routes/admin.mjs";
-
-const port = Number(process.env.PORT) || 3000;
+import { feedRouter } from "./routes/feed.mjs";
+import { postsRouter } from "./routes/posts.mjs";
+import { connectionsRouter } from "./routes/connections.mjs";
+import { uploadsRouter } from "./routes/uploads.mjs";
+import { bookmarksRouter } from "./routes/bookmarks.mjs";
+import { profileRouter } from "./routes/profile.mjs";
 
 const app = express();
 app.disable("x-powered-by");
@@ -18,6 +24,16 @@ app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use("/api", miscRouter);
 app.use("/api", authRouter);
 app.use("/api", adminRouter);
+app.use("/api", profileRouter);
+
+const communityRouter = Router();
+communityRouter.use(requireAuth);
+communityRouter.use(feedRouter);
+communityRouter.use(postsRouter);
+communityRouter.use(connectionsRouter);
+communityRouter.use(uploadsRouter);
+communityRouter.use(bookmarksRouter);
+
 app.use("/api/community", communityRouter);
 
 app.use("/api", (_request, response) => {
@@ -27,8 +43,8 @@ app.use("/api", (_request, response) => {
 async function start() {
   try {
     await initializeDatabase();
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`Server listening on port ${port}`);
+    app.listen(config.port, "0.0.0.0", () => {
+      console.log(`Server listening on port ${config.port}`);
     });
   } catch (error) {
     console.error("Could not initialize PostgreSQL", error);
